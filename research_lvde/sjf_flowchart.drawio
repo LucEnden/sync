@@ -1,51 +1,100 @@
 <mxfile host="65bd71144e">
     <diagram id="hyS-Di6CrhPwkYetJnE0" name="Page-1">
-        <mxGraphModel dx="874" dy="455" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2000" pageHeight="1125" math="0" shadow="0">
+        <mxGraphModel dx="895" dy="572" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2000" pageHeight="1125" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
-                <mxCell id="6" style="edgeStyle=none;html=1;" edge="1" parent="1" source="2" target="7">
+                <mxCell id="6" style="edgeStyle=none;html=1;" parent="1" source="2" target="7" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <mxPoint x="600" y="160" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="2" value="Queue" style="strokeWidth=2;html=1;shape=mxgraph.flowchart.database;whiteSpace=wrap;" vertex="1" parent="1">
+                <mxCell id="2" value="Queue" style="strokeWidth=2;html=1;shape=mxgraph.flowchart.database;whiteSpace=wrap;" parent="1" vertex="1">
                     <mxGeometry x="440" y="120" width="80" height="80" as="geometry"/>
                 </mxCell>
-                <mxCell id="4" style="edgeStyle=none;html=1;" edge="1" parent="1" source="3" target="2">
+                <mxCell id="4" style="edgeStyle=none;html=1;" parent="1" source="3" target="2" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="3" value="Detirmine&lt;br&gt;Burst Time" style="strokeWidth=2;html=1;shape=mxgraph.flowchart.decision;whiteSpace=wrap;" vertex="1" parent="1">
-                    <mxGeometry x="280" y="120" width="80" height="80" as="geometry"/>
+                <mxCell id="3" value="Detirmine&lt;br&gt;Burst Time" style="strokeWidth=2;html=1;shape=mxgraph.flowchart.decision;whiteSpace=wrap;" parent="1" vertex="1">
+                    <mxGeometry x="240" y="120" width="80" height="80" as="geometry"/>
                 </mxCell>
-                <mxCell id="12" style="edgeStyle=none;html=1;entryX=0.5;entryY=1;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="7" target="2">
+                <mxCell id="12" style="edgeStyle=none;html=1;entryX=0.5;entryY=1;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" source="7" target="2" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <mxPoint x="540" y="300" as="targetPoint"/>
                         <Array as="points">
-                            <mxPoint x="640" y="280"/>
-                            <mxPoint x="480" y="280"/>
+                            <mxPoint x="760" y="240"/>
+                            <mxPoint x="480" y="240"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="18" style="edgeStyle=none;html=1;" edge="1" parent="1" source="7" target="14">
+                <mxCell id="18" style="edgeStyle=none;html=1;" parent="1" source="7" target="14" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="7" value="Process in&lt;br&gt;&lt;div style=&quot;&quot;&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;Excecution&lt;/span&gt;&lt;/div&gt;" style="verticalLabelPosition=middle;verticalAlign=middle;html=1;shape=process;whiteSpace=wrap;rounded=1;size=0;arcSize=6;labelPosition=center;align=center;" vertex="1" parent="1">
-                    <mxGeometry x="600" y="120" width="80" height="80" as="geometry"/>
+                <mxCell id="21" style="edgeStyle=none;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0.5;exitY=0;exitDx=0;exitDy=0;" parent="1" source="14" target="2" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="920" y="80"/>
+                            <mxPoint x="480" y="80"/>
+                        </Array>
+                    </mxGeometry>
                 </mxCell>
-                <mxCell id="10" style="edgeStyle=none;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="16" target="3">
+                <mxCell id="7" value="Process in&lt;br&gt;&lt;div style=&quot;&quot;&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;Excecution&lt;/span&gt;&lt;/div&gt;" style="verticalLabelPosition=middle;verticalAlign=middle;html=1;shape=process;whiteSpace=wrap;rounded=1;size=0;arcSize=6;labelPosition=center;align=center;" parent="1" vertex="1">
+                    <mxGeometry x="720" y="120" width="80" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="10" style="edgeStyle=none;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" source="16" target="3" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <mxPoint x="120" y="160" as="sourcePoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="13" value="Enters waiting state" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
-                    <mxGeometry x="500" y="250" width="120" height="30" as="geometry"/>
+                <mxCell id="13" value="Enters waiting state" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+                    <mxGeometry x="560" y="220" width="120" height="20" as="geometry"/>
                 </mxCell>
-                <mxCell id="14" value="" style="ellipse;html=1;shape=endState;fillColor=#000000;strokeColor=#FFFFFF;" vertex="1" parent="1">
-                    <mxGeometry x="760" y="120" width="80" height="80" as="geometry"/>
+                <mxCell id="14" value="" style="ellipse;html=1;shape=endState;fillColor=#FFFFFF;strokeColor=default;" parent="1" vertex="1">
+                    <mxGeometry x="880" y="120" width="80" height="80" as="geometry"/>
                 </mxCell>
-                <mxCell id="16" value="" style="strokeWidth=2;html=1;shape=mxgraph.flowchart.start_2;whiteSpace=wrap;strokeColor=#FFFFFF;" vertex="1" parent="1">
-                    <mxGeometry x="120" y="120" width="80" height="80" as="geometry"/>
+                <mxCell id="16" value="" style="strokeWidth=2;html=1;shape=mxgraph.flowchart.start_2;whiteSpace=wrap;strokeColor=#FFFFFF;fillColor=#FFFFFF;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="120" width="80" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="19" value="New process gets&amp;nbsp;&lt;span class=&quot;JCzEY tNxQIb&quot;&gt;instantiated&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+                    <mxGeometry x="120" y="120" width="120" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="20" value="Task manager starts new process" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+                    <mxGeometry x="600" y="80" width="200" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="22" value="Add to queue based on queue time" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+                    <mxGeometry x="320" y="120" width="120" height="40" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+    <diagram id="FmOqSaMxAU7rS998gTiy" name="Page-2">
+        <mxGraphModel dx="445" dy="572" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2000" pageHeight="1125" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="hyUuzP-OlDrfrNMSWEDe-2" value="TaskManager" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=26;fillColor=none;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;strokeColor=default;" parent="1" vertex="1">
+                    <mxGeometry x="160" y="160" width="200" height="158" as="geometry"/>
+                </mxCell>
+                <mxCell id="hyUuzP-OlDrfrNMSWEDe-5" value="- taskQueue: List" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="hyUuzP-OlDrfrNMSWEDe-2" vertex="1">
+                    <mxGeometry y="26" width="200" height="26" as="geometry"/>
+                </mxCell>
+                <mxCell id="hyUuzP-OlDrfrNMSWEDe-3" value="+ createTask(...): void" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="hyUuzP-OlDrfrNMSWEDe-2" vertex="1">
+                    <mxGeometry y="52" width="200" height="26" as="geometry"/>
+                </mxCell>
+                <mxCell id="hyUuzP-OlDrfrNMSWEDe-4" value="+ runNextTask(...): void" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="hyUuzP-OlDrfrNMSWEDe-2" vertex="1">
+                    <mxGeometry y="78" width="200" height="28" as="geometry"/>
+                </mxCell>
+                <mxCell id="hyUuzP-OlDrfrNMSWEDe-19" value="+ returnToQueue(task: Task): void" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="hyUuzP-OlDrfrNMSWEDe-2" vertex="1">
+                    <mxGeometry y="106" width="200" height="26" as="geometry"/>
+                </mxCell>
+                <mxCell id="5dShjGrhk21UG-AjgkYx-2" value="+ watchTasks(): void" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="hyUuzP-OlDrfrNMSWEDe-2">
+                    <mxGeometry y="132" width="200" height="26" as="geometry"/>
+                </mxCell>
+                <mxCell id="hyUuzP-OlDrfrNMSWEDe-10" value="queue" style="shape=folder;fontStyle=1;spacingTop=10;tabWidth=40;tabHeight=14;tabPosition=left;html=1;strokeColor=default;fillColor=none;" parent="1" vertex="1">
+                    <mxGeometry x="440" y="160" width="70" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="hyUuzP-OlDrfrNMSWEDe-11" value="threading" style="shape=folder;fontStyle=1;spacingTop=10;tabWidth=40;tabHeight=14;tabPosition=left;html=1;strokeColor=default;fillColor=none;" parent="1" vertex="1">
+                    <mxGeometry x="440" y="230" width="70" height="50" as="geometry"/>
                 </mxCell>
             </root>
         </mxGraphModel>
