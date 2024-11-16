@@ -3,45 +3,56 @@ import random
 import time
 
 
-class Task():
-    def __init__(self, BT: float):
-        self.BT = BT
+def atomic_bow():
+    """
+    An atomic `body of work`. Meaning this function will either come to full completion once ran, or not ran at all.
+    """
+    pass
 
-    def body_of_work(self) -> None:
-        """
-        Emulates some body of work using the `time.sleep` function
-        """
-        time.sleep(self.BT)
+def non_atomic_bow():
+    """
+    A non atomic `body of work`. Meaning this function may be paused once ran and be in a state of incompletness.
+    """
+    pass
 
+class Process():
+    def __init__(self, bow: function):
+        self.__threads__: list = []
+        self.state: str = "new"
+
+    def bow(self):
+        return self.__bow__()
 
 class BurstTimeEstimator():
     def __init__(self):
         pass
 
-    def __get_random_bt__() -> float:
+    def get_random_bt(_min: int = 10, _max: int = 500, _div: int = 1000) -> float:
         """
         ## Returns:
-            A random value between `10` and `500` (inclusive) divided by `1000`
+            A random value between `_min` and `_max` (inclusive) divided by `_div`
         """
-        _min = 10
-        _max = 500
-        _div = 1000
-        
         return random.randint(_min, _max) / _div
 
-    def esstimate_bursttime(self, t: Task):
-        return self.__get_random_bt__()
+    def estimate_bursttime(self, bt: float):
+        return bt * (random.randint(1, 10) / 100)
 
 
 class TaskManager():
     def __init__(self):
-        self.__queue__: list[Task] = []
+        self.__queue__: list[dict] = []
 
-    def createTask(BT: float) -> Task:
-        return Task(BT)
-
-    def runNextTask() -> None:
+    def new_process() -> Process:
+        """
+        Adds a new process to `self.__queue__` according to SJF logic.
+        """
         pass
 
-    def returnToQueue(task: Task) -> None:
+    def run_next_process_in_line() -> None:
+        """
+        Calls `self.__queue__[0]['process'].run()`
+        """
+        pass
+
+    def returnToQueue(task: function) -> None:
         pass
