@@ -11,10 +11,9 @@ import threading
 import time
 import random
 
-_verbose = True         # Set to True to print information to stdout
-_run_tests = True       # Set to True to run tests at the end of the file
+_verbose = False         # Set to True to print information to stdout
+_run_tests = False       # Set to True to run tests at the end of the file
 _process_counter = 0    # Counter for the number of processes generated
-# TODO fix concurent counter access (mutex?)
 
 # region Emulation classes
 
@@ -144,7 +143,7 @@ class Process():
             chosen_bt = random.randint(0, num_threads - 1)
             burst_times[chosen_bt] = burst_times[chosen_bt] * self.long_thread_bt_multiplier
             if _verbose:
-                print(f"Thread {chosen_bt} has been chosen to have a burst time 100 times larger than the rest")
+                print(f"Thread {chosen_bt} in process {self.id} has been chosen to have a burst time 100 times larger than the avarage")
 
         # At this point we can set the `bt_sum` property
         self.bt_sum = sum(burst_times)
@@ -438,7 +437,7 @@ def module_test_2():
     long_thread_bt_multiplier = 10
 
     short_processes = [
-            queue_item_generator.generate_item(
+        queue_item_generator.generate_item(
             max_threads=8, 
             max_long_thread_change=0
         ) for _ in range(N_processes_to_generate - 1)
@@ -465,18 +464,22 @@ def module_test_2():
 
 
 if _run_tests:
-    tests_to_run = [
-        threading.Thread(target=module_test_1),
-        threading.Thread(target=module_test_2),
-    ]
+    module_test_1()
+    module_test_2()
+
+    # TODO Check why the code bellow works on one machine but not on the other
+    # tests_to_run = [
+    #     threading.Thread(target=module_test_1),
+    #     threading.Thread(target=module_test_2),
+    # ]
     
-    for i, t in enumerate(tests_to_run):
-        print(f"Running test {i + 1}")
-        try:
-            t.start()
-        except Exception as e:
-            print(f"Running test {i + 1} failed:\n{e}")
+    # for i, t in enumerate(tests_to_run):
+    #     print(f"Running test {i + 1}")
+    #     try:
+    #         # t.start()
+    #         t()
+    #     except Exception as e:
+    #         print(f"Running test {i + 1} failed:\n{e}")
 # endregion
 
-
-# TODO 1 - Add a main function that will run the emulation, such that the queue and currently running process are available even outside this module
+# TODO Add a main function that will setup everything to run a simulation
