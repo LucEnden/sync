@@ -66,8 +66,9 @@ tC = threading.Thread(target=C, name="C")
 tD = threading.Thread(target=D, name="D")
 
 # run threads in random order
-threads = [ tA, tB, tC, tD ]
+threads = [ tB, tC, tD ]
 random.shuffle(threads)
+threads.append(tA) # append thread A last to ensure everything works
 
 for t in threads:
     t.start()
