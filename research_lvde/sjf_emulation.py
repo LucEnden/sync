@@ -11,9 +11,14 @@ import threading
 import time
 import random
 
-_verbose = False         # Set to True to print information to stdout
-_run_tests = False       # Set to True to run tests at the end of the file
-_process_counter = 0    # Counter for the number of processes generated
+_verbose = False                                # Set to True to print information to stdout
+_run_tests = False                              # Set to True to run tests at the end of the file
+_process_counter = 0                            # Counter for the number of processes generated
+_process_counter_mutex = threading.Semaphore()  # Mutex for the process counter
+_time_delta = time.time()                       # Time delta for the simulation
+_run_sim = False                                # Set to True to run the simulation
+
+# TODO add more unit tests, instead of just system tests
 
 # region Emulation classes
 
@@ -21,22 +26,17 @@ class NumberGenerator():
     """
     Generates numbers used during the emulation.
     """
-    def __init__(self, seed: int = 43) -> None:
-        if not isinstance(seed, int):
-            seed = 43  # The answer to everything
-
-        self.__seed__ = seed
+    def __init__(self) -> None:
         self.__process_counter__ = 0
 
-    def random_bt(self, _min: int = 100, _max: int = 300, _div: int = 100) -> float:
+    def random_bt(self, _min: int = 50, _max: int = 300, _div: int = 100) -> float:
         """
-        Generates a random short burst time (`random.randint(_min, _max) / _div`)
+        Generates a random possitive burst time (`abs(random.randint(_min, _max) / _div)`)
 
         ## Returns
-        - float: Random number between `_min` and `_max` divided by `_div`
+        - float: Absolute value of a random number between `_min` and `_max` divided by `_div`
         """
-        random.seed(self.__seed__)
-        return random.randint(_min, _max) / _div
+        return abs(random.randint(_min, _max) / _div)
 
     def new_process_id(self) -> int:
         """
@@ -45,10 +45,38 @@ class NumberGenerator():
         ## Returns
         - int: A new process id
         """
-        global _process_counter
+        global _process_counter, _process_counter_mutex
 
+        _process_counter_mutex.acquire()
         _process_counter = _process_counter + 1
+        _process_counter_mutex.release()
+
         return _process_counter
+
+
+class ThreadGenerator():
+    def __init__(self) -> None:
+        pass
+
+    def generate_thread(self, burst_time: float) -> threading.Thread:
+        """
+        Generates a new thread that sleeps for the given burst time.
+
+        ## Parameters
+        - burst_time: float
+
+        ## Returns
+        - threading.Thread: A new thread instance
+        """
+        def thread_task(bt: float) -> None:
+            global _verbose
+            if _verbose:
+                print(f"Thread is running")
+            time.sleep(bt)
+            if _verbose:
+                print(f"Thread finished execution")
+
+        return threading.Thread(target=thread_task, args=(burst_time,))
 
 
 class ProcessState:
@@ -67,7 +95,7 @@ class Process():
     Holds information about process, usually held in the process control block.
 
     ## Parameters:
-    - max_threads: to maximum amount of random threads to be generated for this process 
+    - n_threads: the number of threads to generate for this process
     - max_long_thread_change: `int` The max change a thread within this process will be longer then others (lower means more frequent).
     - long_thread_bt_multiplier: `int` The amount to multiply any randomly selected
 
@@ -88,80 +116,68 @@ class Process():
     The change a thread within any process will be longer then others is calculated via `random.randint(1, self.max_long_thread_change)`.
     If the outcome of this is 1, then a single random thread is selected and its burst time is is multiplied by `self.long_thread_bt_multiplier`
     """
-    def __init__(self, max_threads: int = 8, max_long_thread_change: int = 100, long_thread_bt_multiplier: int = 10) -> None:
-        self.threads = list[threading.Thread]
+    def __init__(self, n_threads: int = 2, max_long_thread_change: int = 10, long_thread_bt_multiplier: int = 10) -> None:
+        self.threads: list[threading.Thread] = []
         self.state: ProcessState = ProcessState.NEW
         self.id: int = NumberGenerator().new_process_id()
         self.bt_sum: int = 0
+        self.avg_bt: int = 0
+        self.min_bt: int = 0
+        self.max_bt: int = 0
+        self.ttc: int = 0
 
-        if not isinstance(max_threads, int):
-            max_threads = 8
-        self.max_threads = max_threads
+        # Gaurd clauses for thread generation parameters
+        if not isinstance(n_threads, int):
+            n_threads = 2
 
         if not isinstance(max_long_thread_change, int):
-            max_long_thread_change = 100
-        self.max_long_thread_change: int = max_long_thread_change
+            max_long_thread_change = 10
 
         if not isinstance(long_thread_bt_multiplier, int):
             long_thread_bt_multiplier = 10
-        self.long_thread_bt_multiplier = long_thread_bt_multiplier
-
 
         # Generate random threads
-        self.__new_random_threads__()
+        self.__new_random_threads__(
+            n_threads=n_threads,
+            max_long_thread_change=max_long_thread_change,
+            long_thread_bt_multiplier=long_thread_bt_multiplier
+        )
 
-    def __new_random_threads__(self) -> None:
+    def __new_random_threads__(self, n_threads: int, max_long_thread_change: int, long_thread_bt_multiplier: int) -> None:
         """
         Empties `self.threads` and generates a random number of threads with random burst times.
         """
         global _verbose  # Because the encapsulation of `thread_task` function, we need to access this variable from the global scope, and then again in the `thread_task` function
 
-        self.threads: list[threading.Thread] = []  # Empty the list
+        self.threads = []  # Empty the list
 
-        # Generate a random number of threads
-        if self.max_threads == 0:
-            return None
-        if self.max_threads < 0:
-            self.max_threads = 1
-
-        num_threads = random.randint(1, self.max_threads)
         ng = NumberGenerator()
         burst_times = [
-            ng.random_bt() for _ in range(num_threads)
+            ng.random_bt() for _ in range(n_threads)
         ]
 
-        # Their is a 1 in a 1000 change that any given burst time will be N times larger than the rest
-        if self.max_long_thread_change <= 0:
-            minChange = 0
-        else:
-            minChange = 1
+        # 1 in X chance that a thread will be longer then the rest
+        min_change = 0
+        if long_thread_bt_multiplier < 1:
+            long_thread_bt_multiplier = 1
+        should_multiply = random.randint(min_change, max_long_thread_change)
 
-        if self.long_thread_bt_multiplier < 1:
-            self.long_thread_bt_multiplier = 1
-
-        if random.randint(minChange, self.max_long_thread_change) == 1:
-            chosen_bt = random.randint(0, num_threads - 1)
-            burst_times[chosen_bt] = burst_times[chosen_bt] * self.long_thread_bt_multiplier
+        if should_multiply == 1:
+            chosen_bt = random.randint(0, len(burst_times) - 1)
+            burst_times[chosen_bt] = burst_times[chosen_bt] * long_thread_bt_multiplier
             if _verbose:
-                print(f"Thread {chosen_bt} in process {self.id} has been chosen to have a burst time 100 times larger than the avarage")
-
-        # At this point we can set the `bt_sum` property
-        self.bt_sum = sum(burst_times)
-
-        # Function bellow is the actual task that will be executed by the threads
-        def thread_task(id: int, bt: float) -> None:
-            global _verbose
-            # if _verbose:
-            #     print(f"Thread {id} is running")
-            time.sleep(bt)
-            # if _verbose:
-            #     print(f"Thread {id} finished execution")
+                print(f"Thread {chosen_bt} in process {self.id} has been chosen to have a burst time {long_thread_bt_multiplier} times larger")
 
         # Create the threads
-        for i in range(num_threads):
-            thread = threading.Thread(
-                target=thread_task, args=(i, burst_times[i]))
-            self.threads.append(thread)
+        tg = ThreadGenerator()
+        for bt in burst_times:
+            self.threads.append(tg.generate_thread(bt))
+
+        # At this point we can set the `bt_sum` and `avg_bt` properties
+        self.bt_sum = sum(burst_times)
+        self.avg_bt = self.bt_sum / len(self.threads)
+        self.min_bt = min(burst_times)
+        self.max_bt = max(burst_times)
 
     def execute(self):
         """
@@ -189,34 +205,72 @@ class QueueItem():
     def __init__(self, process: Process) -> None:
         self.process = process
         self.age = 0
+        self.arrival_time = 0
 
 
-class ReadyQueue():
-    """
-    Holds processes internally for schedular to pick from.
-    """
-
+class BaseQueue():
     def __init__(self) -> None:
         self.__queue__: list[QueueItem] = []
 
     def is_empty(self) -> bool:
+        """
+        Returns `True` if the queue is empty, `False` otherwise.
+        """
         return len(self.__queue__) == 0
 
     def add(self, item: QueueItem):
         """
         Adds a process to the ready queue.
         """
+        global _time_delta
+        item.arrival_time = time.time() - _time_delta
         self.__queue__.append(item)
 
-    def pop(self, i: int = 0):
+    def pop(self, i: int = 0) -> (QueueItem | None):
         """
-        Removes and returns the process at index `i` from the ready queue.
+        Removes and returns the process at index `i` from the ready queue. If the index is out of range, returns `None`.
+
+        Updates the age of the processes left in the queue, if any.
         """
-        q = self.__queue__.pop(i)
+        try:
+            q = self.__queue__.pop(i)
+        except IndexError:
+            return None
+
         for i in range(len(self.__queue__)):
             self.__queue__[i].age += 1
 
         return q
+
+    def __iter__(self):
+        """
+        Get an iterator from an object.
+        """
+        return iter(self.__queue__)
+
+    def __getitem__(self, index):
+        """
+        Get an item from the queue by index.
+        """
+        return self.__queue__[index]
+    
+    def __len__(self):
+        # Return the length of the internal list (or any other logic you want)
+        return len(self.__queue__)
+
+
+class ReadyQueue(BaseQueue):
+    """
+    Holds processes internally for schedular to pick from.
+    """
+    def __init__(self) -> None:
+        super().__init__()
+
+    def get_first_n(self, n: int):
+        """
+        Returns the first `n` processes from the ready queue.
+        """
+        return self.__queue__[:n]
 
     def sort(self, key=None, reverse: bool = False):
         """
@@ -224,44 +278,16 @@ class ReadyQueue():
         """
         self.__queue__.sort(key=key, reverse=reverse)
 
-    def __iter__(self):
-        """
-        Get an iterator from an object.
-        """
-        return iter(self.__queue__)
 
-    def __getitem__(self, index):
-        """
-        Get an item from the queue by index.
-        """
-        return self.__queue__[index]
-
-
-class CompletedQueue():
+class CompletedQueue(BaseQueue):
     """
     Holds processes that have completed execution.
     """
-
     def __init__(self) -> None:
-        self.__queue__: list[QueueItem] = []
-
-    def add(self, item: QueueItem):
-        self.__queue__.append(item)
+        super().__init__()
 
     def get_last_n(self, n: int):
         return self.__queue__[-n:]
-
-    def __iter__(self):
-        """
-        Get an iterator from an object.
-        """
-        return iter(self.__queue__)
-
-    def __getitem__(self, index):
-        """
-        Get an item from the queue by index.
-        """
-        return self.__queue__[index]
 
 
 class Schedular():
@@ -273,6 +299,7 @@ class Schedular():
         if not isinstance(age_threshold, int):
             age_threshold = 10
         self.age_threshold = age_threshold
+        self.sorting_style = "burst_time"
 
     def select_process(self, queue: ReadyQueue) -> QueueItem | None:
         """
@@ -289,36 +316,61 @@ class Schedular():
             return None
 
         # is their any queue item with an age above the specified threshold?
-        if any([item.age > self.age_threshold for item in queue]):
+        if any([item.age >= self.age_threshold for item in queue]):
             if _verbose:
                 print("Sorting the ready queue by age")
 
+            self.sorting_style = "age"
             # Sort the ready queue: first by age (descending), then by burst time (descending)
             queue.sort(key=lambda x: (-x.age, -x.process.bt_sum))
 
         else:
             if _verbose:
                 print("Sorting the ready queue by burst time")
-
+            
+            self.sorting_style = "burst_time"
             # sort the ready queue by process burst time from low to high
-            queue.sort(key=lambda x: x.process.bt_sum)
+            queue.sort(key=lambda x: x.process.avg_bt)
 
         # return the first item in the ready queue
         return queue.pop()
+
+
+class CPU():
+    """
+    Emulates the CPU.
+    """
+    def __init__(self) -> None:
+        self.running_process: Process | None = None
+
+    def run(self, process: Process):
+        """
+        Runs the CPU until the ready queue is empty.
+
+        ## Parameters
+        - process: Process instance
+        """
+        global _verbose
+        
+        self.running_process = process
+        if _verbose:
+            print(f"Process {process.id} is running")
+
+        process.execute()
+        self.running_process = None
 
 
 class Dispatcher():
     """
     Gives control of the CPU’s core to the process selected by the Scheduler.
     """
-
     def __init__(self) -> None:
-        pass
+        self.CPU = CPU()
 
     def dispatch(self, scheduler: Schedular, ready_queue: ReadyQueue, completed_queue: CompletedQueue):
         """
         Selects a process from `ready_queue`, executes it and moves it to `completed_queue`.
-        Also updates the age of the processes left in the ready queue, if any.
+        Also sets the time it took to complete the process.
 
         ## Parameters
         - scheduler: Schedular instance
@@ -332,7 +384,14 @@ class Dispatcher():
             if _verbose:
                 print(f"Process {queue_item.process.id} has been selected to run")
 
-            queue_item.process.execute()
+            queue_item.process.state = ProcessState.RUNNING
+
+            # Execute the process and measure the time it took to complete
+            start = time.time()
+            self.CPU.run(queue_item.process)
+            end = time.time()
+            queue_item.process.ttc = end - start
+
             completed_queue.add(queue_item)
 
 
@@ -346,15 +405,15 @@ class QueueItemGenerator():
         """
         global _verbose
 
-        if not 'max_threads' in kwargs.keys():
-            kwargs['max_threads'] = None
+        if not 'n_threads' in kwargs.keys():
+            kwargs['n_threads'] = None
         if not 'max_long_thread_change' in kwargs.keys():
             kwargs['max_long_thread_change'] = None
         if not 'long_thread_bt_multiplier' in kwargs.keys():
             kwargs['long_thread_bt_multiplier'] = None
 
         p = Process(
-            max_threads=kwargs['max_threads'],
+            n_threads=kwargs['n_threads'],
             max_long_thread_change=kwargs['max_long_thread_change'], 
             long_thread_bt_multiplier=kwargs['long_thread_bt_multiplier']
             )
@@ -363,6 +422,123 @@ class QueueItemGenerator():
             print(f"Process {p.id} has been generated")
 
         return q
+
+
+class Simulation():
+    """
+    Runs a thread safe simulation of the SJF algorithm.
+
+    It does this by running two threads concurrently:
+    - One thread generates new processes and adds them to the ready queue on a regular interval
+    - The other thread selects a process from the ready queue, executes it and moves it to the completed queue
+    """
+    def __init__(self) -> None:
+        self.queue_item_generator = QueueItemGenerator()
+        self.scheduler = Schedular()
+        self.ready_queue = ReadyQueue()
+        self.dispatcher = Dispatcher()
+        self.completed_queue = CompletedQueue()
+
+        self.dispatch_thread: threading.Thread | None = None
+        self.generate_thread: threading.Thread | None = None
+
+        self._dispatch_sema = threading.Semaphore(1)
+        self._generate_sema = threading.Semaphore(1)
+        self.is_running = False
+
+    def setup(self, N_start_processes: int = 0, N_items_to_keep_ready: int = 100):
+        """
+        Initializes the simulation threads.
+        """
+        global _verbose
+        
+        self._dispatch_sema.acquire()
+        self._generate_sema.acquire()
+
+        # Reinitialize the queues
+        self.ready_queue = ReadyQueue()
+        self.completed_queue = CompletedQueue()
+
+        # Add some processes to the ready queue
+        for _ in range(N_start_processes):
+            self.ready_queue.add(self.queue_item_generator.generate_item())
+
+        # Setup the dispatch thread
+        def __dispatch_thread__():
+            while True:
+                # Using rendezvous pattern to ensure the dispatcher and generator don't run at the same time
+                self._dispatch_sema.release()
+                if not self.ready_queue.is_empty() and self.is_running:
+                    if _verbose:
+                        print("Dispatching a process during the simulation")
+                    self.dispatcher.dispatch(self.scheduler, self.ready_queue, self.completed_queue)
+                self._generate_sema.acquire()
+
+        self.dispatch_thread = threading.Thread(target=__dispatch_thread__)
+
+        # Setup the generate queue items thread
+        def __generate_queue_items_thread__():
+            global _verbose
+            # Generates new processes and adds them to the ready queue
+            while True:
+                # Using rendezvous pattern to ensure the dispatcher and generator don't run at the same time
+                self._generate_sema.release()
+                if self.is_running and len(self.ready_queue) < N_items_to_keep_ready:
+                    if _verbose:
+                        print(f"Adding {N_items_to_keep_ready - len(self.ready_queue)} new processes to the ready queue during the simulation")
+                    for _ in range(N_items_to_keep_ready - len(self.ready_queue)):
+                        self.ready_queue.add(self.queue_item_generator.generate_item())
+                self._dispatch_sema.acquire()
+                
+        self.generate_thread = threading.Thread(target=__generate_queue_items_thread__)
+
+        self._dispatch_sema.release()
+        self._generate_sema.release()
+
+    def start(self):
+        """
+        Does nothing if `this.init` has not been called, otherwise starts the simulation thread.
+        """
+        global _verbose, _process_counter, _process_counter_mutex
+        if self.generate_thread == None or self.dispatch_thread == None:
+            return
+        if self.generate_thread.is_alive() or self.dispatch_thread.is_alive():
+            return
+        
+        _process_counter_mutex.acquire()
+        _process_counter = 0
+        _process_counter_mutex.release()
+
+        self._dispatch_sema.acquire()
+        self._generate_sema.acquire()
+
+        self.is_running = True
+        self.generate_thread.start()
+        self.dispatch_thread.start()
+        if _verbose:
+            print("Simulation has started")
+
+        self._dispatch_sema.release()
+        self._generate_sema.release()
+
+    def pause(self):
+        """
+        Pauses the simulation.
+        """
+        self.is_running = False
+
+    def resume(self):
+        """
+        Resumes the simulation.
+        """
+        self.is_running = True
+
+    def stop(self):
+        """
+        Stops the simulation.
+        """
+        # TODO add a way to stop the threads gracefully
+        self.is_running = False
 
 # endregion
 
@@ -462,7 +638,6 @@ def module_test_2():
 
     print("MODULE TEST 2 \t PASSED")
 
-
 if _run_tests:
     module_test_1()
     module_test_2()
@@ -482,4 +657,9 @@ if _run_tests:
     #         print(f"Running test {i + 1} failed:\n{e}")
 # endregion
 
-# TODO Add a main function that will setup everything to run a simulation
+if _run_sim:
+    _verbose = True
+    sim = Simulation()
+    sim.setup(30)
+    sim.scheduler.age_threshold = 10
+    sim.start()
