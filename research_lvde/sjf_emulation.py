@@ -441,6 +441,10 @@ class Simulation():
 
         self.dispatch_thread: threading.Thread | None = None
         self.generate_thread: threading.Thread | None = None
+        
+        # TODO add support for callbacks
+        self.dispatch_callback = None
+        self.generate_callback = None
 
         self._dispatch_sema = threading.Semaphore(1)
         self._generate_sema = threading.Semaphore(1)
