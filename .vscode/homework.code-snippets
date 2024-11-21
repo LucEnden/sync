@@ -1,0 +1,33 @@
+{
+    "Setup": {
+        "scope": "python",
+        "prefix": "setup_homework",
+        "body": [
+            "import threading",
+            "import random",
+            "",
+            "# =================================================",
+            "# Assignment implementation:",
+            "# ...",
+            "# =================================================",
+            "",
+            "$0",
+            "",
+            "# =================================================",
+            "# Assignment testing",
+            "# =================================================",
+            "def some_thread():",
+            "\tpass",
+            "",
+            "n_threads = 4",
+            "threads = []",
+            "for i in range(n_threads):",
+            "\tthread = threading.Thread(target=some_thread)",
+            "\tthreads.append(thread)",
+            "random.shuffle(threads)",
+            "",
+            "for thread in threads:",
+            "\tthread.start()"
+        ],
+    }
+}
