@@ -1,3 +1,4 @@
+# Hint for VSCode users: press 'crtl + K' then 'crtl + 0' to fold all regions
 '''
 This is a simple emulation of Shortest Job First (SJF) scheduling algorithm.
 The design of this emulation can be found in `diagrams.drawio` file in the same directory.
@@ -10,6 +11,7 @@ To give some answers to the most interesting parts of the emulation:
 import threading
 import time
 import random
+from typing import Callable
 
 _verbose = False                                # Set to True to print information to stdout
 _run_tests = False                              # Set to True to run tests at the end of the file
@@ -19,6 +21,9 @@ _time_delta = time.time()                       # Time delta for the simulation
 _run_sim = False                                # Set to True to run the simulation
 
 # TODO add more unit tests, instead of just system tests
+# TODO add support for callbacks durring the simulation
+# TODO refactor the code to be more event driven
+# TODO add a way to stop the simulation gracefully (`Simulation().stop()`)
 
 # region Emulation classes
 
@@ -63,7 +68,7 @@ class ThreadGenerator():
         Generates a new thread that sleeps for the given burst time.
 
         ## Parameters
-        - burst_time: float
+        - burst_time: float The amount of time the thread will "work" for
 
         ## Returns
         - threading.Thread: A new thread instance
@@ -442,15 +447,20 @@ class Simulation():
         self.dispatch_thread: threading.Thread | None = None
         self.generate_thread: threading.Thread | None = None
         
-        # TODO add support for callbacks
-        self.dispatch_callback = None
-        self.generate_callback = None
+        self.N_items_to_keep_ready: int = 10
+        self.dispatch_callback: Callable | None = None
+        self.generate_callback: Callable | None = None
 
         self._dispatch_sema = threading.Semaphore(1)
         self._generate_sema = threading.Semaphore(1)
         self.is_running = False
 
-    def setup(self, N_start_processes: int = 0, N_items_to_keep_ready: int = 100):
+    def setup(self, 
+              N_start_processes: int = 0, 
+              N_items_to_keep_ready: int = 10,
+              dispatch_callback: Callable | None = None,
+              generate_callback: Callable | None = None,
+        ):
         """
         Initializes the simulation threads.
         """
@@ -458,6 +468,10 @@ class Simulation():
         
         self._dispatch_sema.acquire()
         self._generate_sema.acquire()
+
+        self.N_items_to_keep_ready = N_items_to_keep_ready
+        self.dispatch_callback = dispatch_callback
+        self.generate_callback = generate_callback
 
         # Reinitialize the queues
         self.ready_queue = ReadyQueue()
@@ -477,6 +491,10 @@ class Simulation():
                         print("Dispatching a process during the simulation")
                     self.dispatcher.dispatch(self.scheduler, self.ready_queue, self.completed_queue)
                 self._generate_sema.acquire()
+
+                # Run callback if it exists
+                if self.dispatch_callback != None:
+                    self.dispatch_callback()
 
         self.dispatch_thread = threading.Thread(target=__dispatch_thread__)
 
@@ -503,7 +521,7 @@ class Simulation():
         """
         Does nothing if `this.init` has not been called, otherwise starts the simulation thread.
         """
-        global _verbose, _process_counter, _process_counter_mutex
+        global _verbose, _process_counter, _process_counter_mutex, _time_delta
         if self.generate_thread == None or self.dispatch_thread == None:
             return
         if self.generate_thread.is_alive() or self.dispatch_thread.is_alive():
@@ -516,6 +534,7 @@ class Simulation():
         self._dispatch_sema.acquire()
         self._generate_sema.acquire()
 
+        _time_delta = time.time()
         self.is_running = True
         self.generate_thread.start()
         self.dispatch_thread.start()
@@ -541,7 +560,6 @@ class Simulation():
         """
         Stops the simulation.
         """
-        # TODO add a way to stop the threads gracefully
         self.is_running = False
 
 # endregion
