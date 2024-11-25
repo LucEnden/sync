@@ -17,11 +17,8 @@ class Rendezvous():
 
     def signal(self):
         self.__semap__.release()
-        print("AAA", self.__semap__._value, "AAA")
 
     def wait(self):
-        # We need to acquire the semaphore associated with a different thread
-        # It does matter to much which one we choose, as long as the choices are unique each time
         self.__semap__.acquire()
 
 # =================================================
@@ -44,8 +41,8 @@ def some_thread(t: int):
         barrier.signal()
 
     # rendezvous
-    barrier.wait()
     print(f"Thread {t} waiting at rendezvous")
+    barrier.wait()
     barrier.signal()
 
     print(f"Thread {t} finished")

@@ -1,0 +1,1 @@
+![queue using semaphores](image.png)
