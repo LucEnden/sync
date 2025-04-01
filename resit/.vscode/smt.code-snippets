@@ -1,0 +1,98 @@
+{
+    "Assert": {
+        "prefix": [ "assert" ],
+        "body": [ "(assert $1)$0" ],
+        "description": "Assert statement"
+    },
+    "AssertAnd": {
+        "prefix": [ "aa", "assert-and" ],
+        "body": [ 
+            "(assert",
+            "(and",
+            "\t",
+            "\t$0",
+            "\t",
+            "); End of AND",
+            "); End of ASSERT"
+        ],
+        "description": "Assert statement"
+    },
+    "EndOfFile": {
+        "prefix": [ "eof", "output" ],
+        "body": [
+            "(check-sat)",
+            "(get-model)"
+        ]
+    },
+    "DefineFunction": {
+        "prefix": [ "df", "define-fun", "define-function" ],
+        "body": [
+            "(define-fun ${1:f} ((${2:X} ${3:Int})) ${4:Bool}",
+            "\t$0",
+            ")"
+        ]
+    },
+    "DeclareFunction": {
+        "prefix": [ "df", "declare-fun", "declare-function" ],
+        "body": [
+            "(declare-fun ${1:f} (Int) ${2:Bool})"
+        ]
+    },
+    "Const": {
+        "prefix": [ "c", "constant" ],
+        "body": [
+            "(declare-const ${1:X} ${2:Int})"
+        ]
+    },
+    "ConstInteger": {
+        "prefix": [ "ci", "constantinteger" ],
+        "body": [
+            "(declare-const ${1:X} Int)$0"
+        ]
+    },
+    "ConstBool": {
+        "prefix": [ "cb", "constantboolean" ],
+        "body": [
+            "(declare-const ${1:X} Bool)$0"
+        ]
+    },
+    "ConstString": {
+        "prefix": [ "cs", "constantstring" ],
+        "body": [
+            "(declare-const ${1:X} String \"$2\")$0"
+        ]
+    },
+    "ForAll": {
+        "prefix": [ "fa", "forall_" ],
+        "body": [
+            "(forall ((${1:X} ${2:Int}))",
+            "\t$0",
+            ")"
+        ]
+    },
+    "GetValue": {
+        "prefix": [ "gv", "getvalue" ],
+        "body": [
+            "(get-value (",
+            "\t$0",
+            "))"
+        ]
+    },
+    "Implies": {
+        "prefix": [ "im", "implies_" ],
+        "body": [
+            "(implies",
+            "\t($0)",
+            "\t()",
+            ")"
+        ]
+    },
+    "And": {
+        "prefix": [ "and" ],
+        "body": [
+            "(and",
+            "\t$0",
+            ")"
+        ]
+    },
+}
